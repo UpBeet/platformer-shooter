@@ -2,7 +2,8 @@
 using UnityEngine.Events;
 using System.Collections;
 
-public delegate void Collision2DEventHandler (Collision2D Collision);
+public delegate void HealthChangeEventHandler (float amount);
+public delegate void Collision2DEventHandler (Collision2D collision);
 	
 public class Destructible : MonoBehaviour {
 
@@ -14,8 +15,8 @@ public class Destructible : MonoBehaviour {
 	[Header ("Health")]
 	public bool destroyOnZeroHealth = false;
 	public bool invulnerable = false;
-	public float maxHealth;
 	public float health = 100f;
+	private float maxHealth;
 
 	[Header ("Collisions")]
 	public bool destroyOnCollision = false;
@@ -23,11 +24,12 @@ public class Destructible : MonoBehaviour {
 	[Header ("Events")]
 	public UnityEvent onAgedOut, onZeroHealth;
 	public event Collision2DEventHandler onCollision2D;
-	public UnityEvent<float> onHeal, onDealDamage;
+	public event HealthChangeEventHandler onHeal, onDealDamage;
 
 	// Use this for initialization
-	void Start () {
+	void Awake () {
 		lifetime = 0f;
+		maxHealth = health;
 	}
 	
 	// Update is called once per frame
@@ -42,9 +44,9 @@ public class Destructible : MonoBehaviour {
 		}
 	}
 
-	private void DealDamage (float damageAmount) {
+	public void DealDamage (float damageAmount) {
 		if (!invulnerable) {
-			onDealDamage.Invoke (damageAmount);
+			if (onDealDamage != null) onDealDamage (damageAmount);
 			health -= damageAmount;
 			if (health <= 0) {
 				health = 0;
@@ -56,8 +58,8 @@ public class Destructible : MonoBehaviour {
 		}
 	}
 
-	private void Heal (float healAmount) {
-		onHeal.Invoke (healAmount);
+	public void Heal (float healAmount) {
+		if (onHeal != null) onHeal (healAmount);
 		health += healAmount;
 		if (health > maxHealth) { health = maxHealth; }
 	}
