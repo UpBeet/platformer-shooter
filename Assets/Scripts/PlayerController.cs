@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour {
 	[Header ("Movement")]
 	public float moveSpeed = 1f;
 	public float jumpForce = 1f;
+	
+	private bool grounded = false;
 
 	[Header ("Shooting")]
 	public Projectile bulletPrefab;
@@ -17,7 +19,6 @@ public class PlayerController : MonoBehaviour {
 
 	private float kickback = 0f;
 	private float fireCooldown = 0f;
-	private bool grounded = false;
 
 	public bool FacingRight {
 		get { return facingRight; }
@@ -54,12 +55,14 @@ public class PlayerController : MonoBehaviour {
 	}
 	private Image aimCone;
 
+	private float aimAngle = 0f;
+
 	private Rigidbody2D rigidbody2D { get { return GetComponent<Rigidbody2D> (); } }
 	private Animator animator { get { return GetComponent<Animator> (); } }
 
 	// Use this for initialization
 	void Start () {
-	
+		EquipGun ();
 	}
 	
 	// Update is called once per frame
@@ -71,9 +74,7 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	private void CheckGrounded () {
-		if (!grounded && rigidbody2D.velocity.y <= 0) {
-			grounded = Physics2D.Linecast (transform.position, GroundCheck.position, 1 << LayerMask.NameToLayer ("Ground"));
-		}
+		grounded = Physics2D.Linecast (transform.position, GroundCheck.position, 1 << LayerMask.NameToLayer ("Ground"));
 	}
 
 	private void HandleInput () {
@@ -81,6 +82,7 @@ public class PlayerController : MonoBehaviour {
 
 		if (h < 0) FacingRight = false;
 		else if (h > 0) FacingRight = true;
+
 		transform.Translate (Vector3.right * h * moveSpeed * Time.deltaTime);
 
 		if (grounded) {
@@ -93,6 +95,9 @@ public class PlayerController : MonoBehaviour {
 
 		if (Input.GetButtonDown ("Jump")) { Jump (); }
 		if (Input.GetButton ("Fire1")) { Fire (); }
+
+		if (Input.GetKey (KeyCode.UpArrow)) { aimAngle += Time.deltaTime * 10; }
+		if (Input.GetKey (KeyCode.DownArrow)) { aimAngle -= Time.deltaTime * 10; }
 	}
 
 	private void UpdateFireRate () {
@@ -105,6 +110,8 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	private void UpdateAim () {
+		AimWeapon (aimAngle);
+
 		if (kickback > 0) {
 			kickback -= stability * Time.deltaTime;
 		}
@@ -122,7 +129,6 @@ public class PlayerController : MonoBehaviour {
 	private void Jump () {
 		if (grounded) {
 			rigidbody2D.AddForce (Vector2.up * jumpForce, ForceMode2D.Impulse);
-			grounded = false;
 			animator.Play ("AlienJump");
 		}
 	}
@@ -133,6 +139,8 @@ public class PlayerController : MonoBehaviour {
 			projectile.Fire (GetRandomFireAngle () * transform.localScale.x);
 			fireCooldown = 1;
 			kickback += shotKickback;
+
+			transform.FindChild ("Weapon").FindChild ("Fire Point").GetComponent<FlashController> ().Flash ();
 		}
 	}
 
@@ -146,8 +154,18 @@ public class PlayerController : MonoBehaviour {
 	private Vector2 GetRandomFireAngle () {
 		float offsetRange = 360f * (1 - (accuracy - kickback)) / 2;
 		float randOffset = Random.Range (-offsetRange, offsetRange);
-		float radianAngle = (randOffset + AimCone.transform.rotation.z) * Mathf.Deg2Rad;
+		float radianAngle = (randOffset + AimCone.transform.rotation.z + aimAngle) * Mathf.Deg2Rad;
 
 		return new Vector2((float)Mathf.Cos(radianAngle), (float)Mathf.Sin(radianAngle));
+	}
+
+	private void AimWeapon (float angle) {
+		transform.FindChild ("Weapon").rotation = Quaternion.Euler (0, 0, angle);
+	}
+
+	private void EquipGun () {
+		Transform firePoint = transform.FindChild ("Weapon").FindChild ("Fire Point");
+		AimCone.transform.position = firePoint.position;
+		AimCone.transform.SetParent (firePoint);
 	}
 }

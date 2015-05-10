@@ -9,9 +9,9 @@ public class Projectile : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 		if (collisionEffect != null) {
-			GetComponent<Destructible> ().onCollision.AddListener (() => {
-				Instantiate (collisionEffect, transform.position, collisionEffect.transform.rotation);
-			});
+			GetComponent<Destructible> ().onCollision2D += (collision) => {
+				Instantiate (collisionEffect, collision.contacts[0].point, collisionEffect.transform.rotation);
+			};
 		}
 	}
 	

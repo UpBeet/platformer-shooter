@@ -2,6 +2,8 @@
 using UnityEngine.Events;
 using System.Collections;
 
+public delegate void Collision2DEventHandler (Collision2D Collision);
+	
 public class Destructible : MonoBehaviour {
 
 	[Header ("Life Span")]
@@ -19,7 +21,8 @@ public class Destructible : MonoBehaviour {
 	public bool destroyOnCollision = false;
 
 	[Header ("Events")]
-	public UnityEvent onAgedOut, onZeroHealth, onCollision;
+	public UnityEvent onAgedOut, onZeroHealth;
+	public event Collision2DEventHandler onCollision2D;
 	public UnityEvent<float> onHeal, onDealDamage;
 
 	// Use this for initialization
@@ -32,8 +35,8 @@ public class Destructible : MonoBehaviour {
 		UpdateLifeSpan ();
 	}
 
-	void OnCollisionEnter2D () {
-		onCollision.Invoke ();
+	void OnCollisionEnter2D (Collision2D collision) {
+		if (onCollision2D != null) onCollision2D (collision);
 		if (destroyOnCollision) {
 			GameObject.Destroy (this.gameObject);
 		}
