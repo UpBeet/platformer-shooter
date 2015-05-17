@@ -57,7 +57,6 @@ build/
 *_i.c
 *_p.c
 *.ilk
-*.meta
 *.obj
 *.pch
 *.pdb
@@ -217,7 +216,8 @@ pip-log.txt
 # =============== #
 # Unity generated #
 # =============== #
-Temp/
+[Tt]emp/
+[Ll]ibrary
 
 # ===================================== #
 # Visual Studio / MonoDevelop generated #
