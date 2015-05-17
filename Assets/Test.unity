@@ -851,7 +851,6 @@ MonoBehaviour:
   lifeSpan: 10
   destroyOnZeroHealth: 1
   invulnerable: 0
-  maxHealth: 100
   health: 100
   destroyOnCollision: 0
   onAgedOut:
